@@ -1,1 +1,512 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memo Notepad Clone</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #ffffff;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    .toolbar {
+      background-color: #f4f4f9;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #ddd;
+    }
+    .toolbar button {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      padding: 13.6px 27.2px; /* Reduced button size by 15% */
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+      font-size: 16.32px; /* Reduced font size by 15% */
+    }
+    .toolbar button:hover {
+      background-color: #0056b3;
+    }
+    .toolbar .word-count {
+      font-size: 20px; /* Increased font size for word count */
+      color: #666;
+    }
+    .toolbar .attribution {
+      font-size: 21.553px; /* Decreased font size by 30% */
+      color: #007bff;
+      margin-right: 20px;
+      white-space: nowrap; /* Keep text in a single line */
+    }
+    .toolbar .attribution b {
+      font-weight: bold;
+    }
+    .notepad-container {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+    .sidebar {
+      width: 275px; /* Increased width by 10% */
+      background-color: #f8f9fa;
+      border-right: 1px solid #ddd;
+      padding: 10px;
+      overflow-y: auto;
+    }
+    .sidebar h3 {
+      margin: 0 0 10px 0;
+      font-size: 24px; /* Increased font size for sidebar heading */
+      position: sticky;
+      top: 0;
+      background-color: #f8f9fa;
+      z-index: 1;
+    }
+    .search-box {
+      width: 100%;
+      padding: 10px;
+      font-size: 20px; /* Increased font size for search box */
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      position: sticky;
+      top: 40px; /* Adjusted to fit below the "Notes" heading */
+      background-color: #f8f9fa;
+      z-index: 1;
+    }
+    .notes-list {
+      list-style-type: none;
+      padding: 0;
+      margin-top: 60px; /* Adjusted to fit below the search box */
+    }
+    .notes-list li {
+      padding: 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #ddd;
+      font-size: 20px; /* Increased font size for notes list */
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .notes-list li:hover {
+      background-color: #e9ecef;
+    }
+    .notes-list li.selected {
+      background-color: #add8e6;
+    }
+    .notes-list li .drag-handle {
+      cursor: grab;
+      margin-right: 10px;
+      font-size: 16px;
+    }
+    .notes-list li .note-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .notes-list li .note-actions button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .notes-list li .note-actions button:hover {
+      color: #007bff;
+    }
+    .main {
+      flex: 1;
+      padding: 20px;
+      background-color: #fff;
+    }
+    textarea {
+      width: 100%;
+      height: 100%;
+      border: none;
+      font-size: 20.25px; /* Decreased font size by 25% */
+      line-height: 36px; /* Increased line spacing by 20% */
+      resize: none;
+      background-color: transparent;
+      font-family: Arial, sans-serif;
+      background: repeating-linear-gradient(
+        #f9f9f9,
+        #f9f9f9 36px, /* Increased line spacing by 20% */
+        #ddd 37px,
+        #ddd 37px
+      );
+      padding-top: 4px; /* Ensure text aligns with lines */
+    }
+    textarea:focus {
+      outline: none;
+    }
+    .dark-mode {
+      background-color: #1e1e1e;
+      color: #ffffff;
+    }
+    .dark-mode .toolbar {
+      background-color: #2d2d2d;
+      border-bottom-color: #444;
+    }
+    .dark-mode .sidebar {
+      background-color: #252526;
+      border-right-color: #444;
+    }
+    .dark-mode .notes-list li {
+      border-bottom-color: #444;
+    }
+    .dark-mode .notes-list li:hover {
+      background-color: #3c3c3c;
+    }
+    .dark-mode .notes-list li.selected {
+      background-color: #0056b3;
+    }
+    .formatting-toolbar {
+      display: flex;
+      gap: 10px;
+      margin-right: 20px;
+    }
+    .formatting-toolbar button {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .formatting-toolbar button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div>
+      <button onclick="createNewNote()">New Note</button>
+      <button onclick="deleteNote()">Delete Note</button>
+      <button onclick="deleteAllNotes()">Delete All Notes</button>
+      <button onclick="undoDelete()">Undo Notes</button>
+      <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+    </div>
+    <div class="formatting-toolbar">
+      <button onclick="increaseFontSize()">A+</button>
+      <button onclick="decreaseFontSize()">A-</button>
+    </div>
+    <div class="attribution">
+      <b>MeroNotepad</b> created by MANDIP GURUNG
+    </div>
+    <div class="word-count" id="wordCount">Words: 0</div>
+  </div>
+
+  <!-- Notepad Container -->
+  <div class="notepad-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <h3>Notes</h3>
+      <input
+        type="text"
+        id="searchBox"
+        class="search-box"
+        placeholder="Search notes..."
+        oninput="searchNotes()"
+      />
+      <ul class="notes-list" id="notesList"></ul>
+    </div>
+
+    <!-- Main Notepad Area -->
+    <div class="main">
+      <textarea id="notepad" placeholder="Start typing your notes here..." oninput="saveNote()"></textarea>
+    </div>
+  </div>
+
+  <script>
+    // Variables
+    const notepad = document.getElementById('notepad');
+    const notesList = document.getElementById('notesList');
+    const wordCount = document.getElementById('wordCount');
+    let notes = JSON.parse(localStorage.getItem('notes')) || [];
+    let currentNoteIndex = null;
+    let deletedNotes = []; // Store deleted notes for undo
+    let selectedNotes = new Set(); // Store multiple selected notes
+    let undoStack = []; // Store undo history
+    let redoStack = []; // Store redo history
+    let dragStartIndex = null; // Track the index of the dragged note
+
+    // Load notes on page load
+    window.onload = () => {
+      renderNotesList();
+      if (notes.length > 0) {
+        loadNote(0);
+      }
+      updateWordCount();
+    };
+
+    // Render notes list
+    function renderNotesList() {
+      notesList.innerHTML = '';
+      notes.forEach((note, index) => {
+        const li = document.createElement('li');
+        const title = note.title || 'Untitled Note';
+        // Limit title to 3-4 words followed by "..."
+        const shortTitle = title.split(' ').slice(0, 4).join(' ') + (title.split(' ').length > 4 ? '...' : '');
+        li.textContent = shortTitle;
+
+        // Add drag handle
+        const dragHandle = document.createElement('span');
+        dragHandle.className = 'drag-handle';
+        dragHandle.textContent = '☰';
+        dragHandle.draggable = true;
+        dragHandle.addEventListener('dragstart', () => dragStart(index));
+        dragHandle.addEventListener('dragover', (e) => dragOver(e, index));
+        dragHandle.addEventListener('drop', () => dragDrop(index));
+        li.prepend(dragHandle);
+
+        // Add three-dot menu for rename and pin
+        const noteActions = document.createElement('div');
+        noteActions.className = 'note-actions';
+        noteActions.innerHTML = `
+          <button onclick="showNoteMenu(${index})">⋮</button>
+        `;
+        li.appendChild(noteActions);
+
+        li.addEventListener('click', (e) => {
+          if (e.ctrlKey) {
+            // Multi-select with Ctrl key
+            if (selectedNotes.has(index)) {
+              selectedNotes.delete(index);
+              li.classList.remove('selected');
+            } else {
+              selectedNotes.add(index);
+              li.classList.add('selected');
+            }
+          } else {
+            // Single select
+            selectedNotes.clear();
+            selectedNotes.add(index);
+            loadNote(index);
+          }
+        });
+        notesList.appendChild(li);
+      });
+      updateSelectedNote();
+    }
+
+    // Create a new note
+    function createNewNote() {
+      notes.unshift({ title: 'Untitled Note', content: '' }); // Add new note to the top
+      currentNoteIndex = 0;
+      renderNotesList();
+      loadNote(currentNoteIndex);
+    }
+
+    // Load a note
+    function loadNote(index) {
+      currentNoteIndex = index;
+      notepad.value = notes[index].content;
+      updateSelectedNote();
+      updateWordCount();
+    }
+
+    // Save note
+    function saveNote() {
+      if (currentNoteIndex !== null) {
+        notes[currentNoteIndex].content = notepad.value;
+        localStorage.setItem('notes', JSON.stringify(notes));
+        renderNotesList();
+        updateWordCount();
+      } else if (notes.length === 0 && notepad.value.trim() !== '') {
+        // Auto-create a new note if all notes are deleted and user starts typing
+        createNewNote();
+      }
+    }
+
+    // Delete a note
+    function deleteNote() {
+      if (selectedNotes.size > 0) {
+        const notesToDelete = Array.from(selectedNotes).sort((a, b) => b - a); // Sort in descending order
+        notesToDelete.forEach((index) => {
+          deletedNotes.push({ note: notes[index], index: index }); // Store deleted notes for undo
+          notes.splice(index, 1);
+        });
+        localStorage.setItem('notes', JSON.stringify(notes));
+        selectedNotes.clear();
+        currentNoteIndex = null;
+        notepad.value = '';
+        renderNotesList();
+        updateWordCount();
+      }
+    }
+
+    // Delete all notes
+    function deleteAllNotes() {
+      deletedNotes.push({ notes: [...notes] }); // Store all notes for undo
+      notes = [];
+      localStorage.removeItem('notes');
+      currentNoteIndex = null;
+      notepad.value = '';
+      renderNotesList();
+      updateWordCount();
+    }
+
+    // Undo delete
+    function undoDelete() {
+      if (deletedNotes.length > 0) {
+        const lastDeleted = deletedNotes.pop();
+        if (lastDeleted.note) {
+          // Undo single delete
+          notes.splice(lastDeleted.index, 0, lastDeleted.note);
+        } else if (lastDeleted.notes) {
+          // Undo delete all
+          notes = lastDeleted.notes;
+        }
+        localStorage.setItem('notes', JSON.stringify(notes));
+        renderNotesList();
+        updateWordCount();
+      }
+    }
+
+    // Search notes
+    function searchNotes() {
+      const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+      const filteredNotes = notes.filter(note => note.title.toLowerCase().includes(searchTerm));
+      notesList.innerHTML = '';
+      filteredNotes.forEach((note, index) => {
+        const li = document.createElement('li');
+        const title = note.title || 'Untitled Note';
+        const shortTitle = title.split(' ').slice(0, 4).join(' ') + (title.split(' ').length > 4 ? '...' : '');
+        li.textContent = shortTitle;
+        li.addEventListener('click', () => loadNote(index));
+        notesList.appendChild(li);
+      });
+    }
+
+    // Update selected note highlight
+    function updateSelectedNote() {
+      const listItems = document.querySelectorAll('.notes-list li');
+      listItems.forEach((li, index) => {
+        if (selectedNotes.has(index)) {
+          li.classList.add('selected');
+        } else {
+          li.classList.remove('selected');
+        }
+      });
+    }
+
+    // Update word count
+    function updateWordCount() {
+      const text = notepad.value.trim();
+      const words = text ? text.split(/\s+/).length : 0;
+      wordCount.textContent = `Words: ${words}`;
+    }
+
+    // Toggle dark mode
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+    }
+
+    // Increase font size
+    function increaseFontSize() {
+      const currentSize = parseFloat(window.getComputedStyle(notepad).fontSize);
+      if (currentSize < 100) {
+        notepad.style.fontSize = `${currentSize + 2}px`;
+        saveNote(); // Auto-save after changing font size
+      }
+    }
+
+    // Decrease font size
+    function decreaseFontSize() {
+      const currentSize = parseFloat(window.getComputedStyle(notepad).fontSize);
+      if (currentSize > 10) {
+        notepad.style.fontSize = `${currentSize - 2}px`;
+        saveNote(); // Auto-save after changing font size
+      }
+    }
+
+    // Drag and drop functionality
+    function dragStart(index) {
+      dragStartIndex = index;
+    }
+
+    function dragOver(e, index) {
+      e.preventDefault();
+      const li = e.target.closest('li');
+      if (li) {
+        li.classList.add('drag-over');
+      }
+    }
+
+    function dragDrop(index) {
+      if (dragStartIndex !== null && dragStartIndex !== index) {
+        const draggedNote = notes.splice(dragStartIndex, 1)[0];
+        notes.splice(index, 0, draggedNote);
+        localStorage.setItem('notes', JSON.stringify(notes));
+        renderNotesList();
+      }
+      dragStartIndex = null;
+      const lis = document.querySelectorAll('.notes-list li');
+      lis.forEach(li => li.classList.remove('drag-over'));
+    }
+
+    // Show note menu (rename and pin)
+    function showNoteMenu(index) {
+      const newTitle = prompt('Rename note:', notes[index].title);
+      if (newTitle !== null) {
+        notes[index].title = newTitle;
+        localStorage.setItem('notes', JSON.stringify(notes));
+        renderNotesList();
+      }
+    }
+
+    // Delete note with Delete key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Delete' && selectedNotes.size > 0) {
+        deleteNote();
+      }
+    });
+
+    // Undo/Redo functionality
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === 'z') {
+        e.preventDefault();
+        undo();
+      } else if (e.ctrlKey && e.key === 'y') {
+        e.preventDefault();
+        redo();
+      }
+    });
+
+    // Undo action
+    function undo() {
+      if (undoStack.length > 0) {
+        const action = undoStack.pop();
+        redoStack.push({ content: notepad.value });
+        notepad.value = action.content;
+        saveNote();
+      }
+    }
+
+    // Redo action
+    function redo() {
+      if (redoStack.length > 0) {
+        const action = redoStack.pop();
+        undoStack.push({ content: notepad.value });
+        notepad.value = action.content;
+        saveNote();
+      }
+    }
+
+    // Track changes for undo/redo
+    notepad.addEventListener('input', () => {
+      undoStack.push({ content: notepad.value });
+      if (undoStack.length > 10) undoStack.shift(); // Limit undo history to 10 actions
+      redoStack = []; // Clear redo stack on new input
+    });
+  </script>
+</body>
+</html>
